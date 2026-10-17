@@ -92,6 +92,23 @@ body {
 		</style>
 		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
 <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+<script>
+/* iPhone: sin esto, Safari silencia el sonido web si el interruptor de silencio está activado.
+   «playback» hace que suene como un vídeo (Safari 17+). */
+try { if (navigator.audioSession) { navigator.audioSession.type = 'playback'; } } catch (e) {}
+/* iOS solo deja arrancar el audio dentro de un toque: se reanudan los contextos de audio en cada toque. */
+(function () {
+	var AC = window.AudioContext || window.webkitAudioContext;
+	if (!AC) { return; }
+	var ctxs = [];
+	var Wrapped = function (opts) { var c = new AC(opts); ctxs.push(c); return c; };
+	Wrapped.prototype = AC.prototype;
+	window.AudioContext = Wrapped;
+	if (window.webkitAudioContext) { window.webkitAudioContext = Wrapped; }
+	var resume = function () { ctxs.forEach(function (c) { if (c.state !== 'running') { c.resume().catch(function () {}); } }); };
+	['touchend', 'pointerup', 'click', 'keydown'].forEach(function (t) { document.addEventListener(t, resume, true); });
+})();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name='apple-mobile-web-app-status-bar-style' content='black-translucent'>
 <meta name='apple-mobile-web-app-title' content='FERRONACHT'>
